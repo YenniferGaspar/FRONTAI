@@ -1,0 +1,20 @@
+<!-- sidebar.component.html -->
+<nav class="sidebar">
+  <div class="logo">
+    <h2>YenniAI</h2>
+  </div>
+  
+  <ul class="menu">
+    <li *ngFor="let item of menuItems">
+      <a 
+        [routerLink]="item.path" 
+        routerLinkActive="active"
+        [routerLinkActiveOptions]="{ exact: true }"
+        class="menu-item"
+      >
+        <span class="icon">{{ item.icon }}</span>
+        <span class="label">{{ item.label }}</span>
+      </a>
+    </li>
+  </ul>
+</nav>
