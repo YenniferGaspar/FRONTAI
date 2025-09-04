@@ -1,1 +1,172 @@
-<p>chatgpt works!</p>
+<div class="chatgpt-container">
+  <!-- Header -->
+  <div class="chat-header">
+    <div class="header-title">
+      <span class="bot-icon">🤖</span>
+      <h2>ChatGPT Assistant</h2>
+    </div>
+    <div class="header-status">
+      <span class="status-indicator" [class.online]="!isLoading"></span>
+      <span class="status-text">{{ isLoading ? 'Escribiendo...' : 'En línea' }}</span>
+    </div>
+  </div>
+
+  <div class="chat-layout">
+    <!-- Sidebar con historial de conversaciones -->
+    <div class="conversations-sidebar">
+      <div class="sidebar-header">
+        <h3>Historial</h3>
+        <button class="refresh-btn" (click)="loadConversations()" title="Actualizar">
+          🔄
+        </button>
+      </div>
+      
+      <div class="conversations-list">
+        <div 
+          *ngFor="let conversation of conversations.slice().reverse()" 
+          class="conversation-item"
+          [class.selected]="selectedConversation?.id === conversation.id"
+          (click)="selectConversation(conversation)"
+        >
+          <div class="conversation-preview">
+            <div class="message-preview">{{ conversation.message | slice:0:50 }}{{ conversation.message.length > 50 ? '...' : '' }}</div>
+            <div class="conversation-time">{{ formatDate(conversation.createdAt) }}</div>
+          </div>
+          <div class="conversation-actions">
+            <button 
+              class="action-btn edit-btn" 
+              (click)="updateQuestion(conversation); $event.stopPropagation()"
+              title="Editar"
+            >✏️</button>
+            <button 
+              class="action-btn delete-btn" 
+              (click)="deleteConversation(conversation.id, $event)"
+              title="Eliminar"
+            >🗑️</button>
+          </div>
+        </div>
+        
+        <div *ngIf="conversations.length === 0" class="empty-state">
+          <span class="empty-icon">💬</span>
+          <p>No hay conversaciones aún</p>
+          <small>Envía tu primer mensaje para comenzar</small>
+        </div>
+      </div>
+    </div>
+
+    <!-- Área principal del chat -->
+    <div class="chat-main">
+      <!-- Área de mensajes -->
+      <div class="messages-container" #messagesContainer>
+        <div *ngIf="conversations.length === 0" class="welcome-message">
+          <div class="welcome-content">
+            <div class="welcome-icon">🤖</div>
+            <h3>¡Hola! Soy tu asistente ChatGPT</h3>
+            <p>Estoy aquí para ayudarte con cualquier pregunta o tarea que tengas.</p>
+            <div class="welcome-suggestions">
+              <button 
+                class="suggestion-btn" 
+                (click)="currentMessage = '¿Cómo funciona la inteligencia artificial?'; focusInput()"
+              >
+                ¿Cómo funciona la IA?
+              </button>
+              <button 
+                class="suggestion-btn" 
+                (click)="currentMessage = 'Explícame qué es Angular'; focusInput()"
+              >
+                Explícame Angular
+              </button>
+              <button 
+                class="suggestion-btn" 
+                (click)="currentMessage = 'Ayúdame a crear un algoritmo'; focusInput()"
+              >
+                Crear algoritmo
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mensajes ordenados cronológicamente (más antiguos arriba) -->
+        <div *ngFor="let conversation of conversations" class="message-group">
+          <!-- Mensaje del usuario -->
+          <div class="message user-message">
+            <div class="message-avatar">
+              <span class="avatar-icon">👤</span>
+            </div>
+            <div class="message-content">
+              <div class="message-bubble user-bubble">
+                {{ conversation.message }}
+              </div>
+              <div class="message-time">{{ formatTime(conversation.createdAt) }}</div>
+            </div>
+          </div>
+
+          <!-- Respuesta del bot -->
+          <div class="message bot-message" *ngIf="conversation.response">
+            <div class="message-avatar">
+              <span class="avatar-icon bot-avatar">🤖</span>
+            </div>
+            <div class="message-content">
+              <div class="message-bubble bot-bubble">
+                <div class="response-text">{{ conversation.response }}</div>
+              </div>
+              <div class="message-time">{{ formatTime(conversation.createdAt) }}</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Indicador de carga -->
+        <div *ngIf="isLoading" class="message bot-message">
+          <div class="message-avatar">
+            <span class="avatar-icon bot-avatar">🤖</span>
+          </div>
+          <div class="message-content">
+            <div class="message-bubble bot-bubble">
+              <div class="typing-indicator">
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Área de entrada de mensaje -->
+      <div class="input-area">
+        <!-- Error message (mantenido como respaldo) -->
+        <div *ngIf="error" class="error-message">
+          <span class="error-icon">⚠️</span>
+          <span class="error-text">{{ error }}</span>
+          <button class="error-close" (click)="clearError()">×</button>
+        </div>
+
+        <div class="input-container">
+          <div class="input-wrapper">
+            <textarea
+              #messageInput
+              [(ngModel)]="currentMessage"
+              (keydown)="onKeyPress($event)"
+              placeholder="Escribe tu mensaje aquí..."
+              class="message-input"
+              rows="1"
+              [disabled]="isLoading"
+            ></textarea>
+            <button 
+              class="send-button"
+              (click)="sendMessage()"
+              [disabled]="!currentMessage.trim() || isLoading"
+              title="Enviar mensaje (Enter)"
+            >
+              <span *ngIf="!isLoading" class="send-icon">📤</span>
+              <span *ngIf="isLoading" class="loading-spinner">⏳</span>
+            </button>
+          </div>
+          <div class="input-hint">
+            Presiona <kbd>Enter</kbd> para enviar, <kbd>Shift + Enter</kbd> para nueva línea
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

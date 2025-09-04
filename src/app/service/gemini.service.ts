@@ -7,7 +7,7 @@ import { YenniAI } from '../interfaces/yenniai.model';
   providedIn: 'root'
 })
 export class GeminiService {
-  private apiUrl = 'http://localhost:8080/api/gemini'; // Ajusta la URL según tu backend
+  private apiUrl = 'https://didactic-space-robot-wrrp7w9rv6wjh9jrw-8085.app.github.dev/api/gemini'; // Ajusta la URL según tu backend
 
   constructor(private http: HttpClient) {}
 
