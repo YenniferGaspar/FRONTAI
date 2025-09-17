@@ -19,59 +19,37 @@
     <div class="conversations-sidebar">
       <div class="sidebar-header">
         <h3>Conversaciones</h3>
-        <button class="new-chat-btn" title="Nueva conversación">
+        <button class="new-chat-btn" (click)="startNewConversation()" title="Nueva conversación">
           <span class="plus-icon">+</span>
         </button>
       </div>
       
       <div class="conversations-list">
-        <!-- Ejemplo de conversaciones -->
-        <div class="conversation-item selected">
+        <!-- Lista de conversaciones -->
+        <div 
+          *ngFor="let conversation of conversations" 
+          class="conversation-item"
+          [class.selected]="selectedConversationId === conversation.id"
+          (click)="selectConversation(conversation)">
           <div class="conversation-preview">
-            <div class="message-preview">¿Cómo funciona la inteligencia artificial?</div>
-            <div class="conversation-time">Hace 2 min</div>
+            <div class="message-preview">{{ getMessagePreview(conversation.message) }}</div>
+            <div class="conversation-time">{{ formatConversationTime(conversation.createdAt) }}</div>
           </div>
           <div class="conversation-actions">
             <button class="action-btn edit-btn" title="Renombrar">
               <span class="edit-icon">✏️</span>
             </button>
-            <button class="action-btn delete-btn" title="Eliminar">
+            <button 
+              class="action-btn delete-btn" 
+              (click)="deleteConversation(conversation.id, $event)"
+              title="Eliminar">
               <span class="delete-icon">🗑️</span>
             </button>
           </div>
         </div>
 
-        <div class="conversation-item">
-          <div class="conversation-preview">
-            <div class="message-preview">Explícame sobre Angular 19</div>
-            <div class="conversation-time">Ayer</div>
-          </div>
-          <div class="conversation-actions">
-            <button class="action-btn edit-btn" title="Renombrar">
-              <span class="edit-icon">✏️</span>
-            </button>
-            <button class="action-btn delete-btn" title="Eliminar">
-              <span class="delete-icon">🗑️</span>
-            </button>
-          </div>
-        </div>
-
-        <div class="conversation-item">
-          <div class="conversation-preview">
-            <div class="message-preview">Ayúdame con un algoritmo de búsqueda</div>
-            <div class="conversation-time">Hace 3 días</div>
-          </div>
-          <div class="conversation-actions">
-            <button class="action-btn edit-btn" title="Renombrar">
-              <span class="edit-icon">✏️</span>
-            </button>
-            <button class="action-btn delete-btn" title="Eliminar">
-              <span class="delete-icon">🗑️</span>
-            </button>
-          </div>
-        </div>
-        
-        <div class="empty-state" style="display: none;">
+        <!-- Estado vacío -->
+        <div class="empty-state" *ngIf="conversations.length === 0">
           <span class="empty-icon">💫</span>
           <p>No hay conversaciones aún</p>
           <small>Comienza una nueva conversación</small>
@@ -82,8 +60,9 @@
     <!-- Área principal del chat -->
     <div class="chat-main">
       <!-- Área de mensajes -->
-      <div class="messages-container">
-        <div class="welcome-message">
+      <div class="messages-container" #messagesContainer>
+        <!-- Mensaje de bienvenida -->
+        <div class="welcome-message" *ngIf="messages.length === 0">
           <div class="welcome-content">
             <div class="welcome-icon">
               <div class="gemini-logo">
@@ -95,72 +74,49 @@
             <h3>¡Hola! Soy Gemini</h3>
             <p>Tu asistente de IA avanzado de Google. Estoy aquí para ayudarte con preguntas, tareas creativas, análisis de código y mucho más.</p>
             <div class="welcome-suggestions">
-              <button class="suggestion-btn">
-                <span class="suggestion-icon">🧠</span>
-                <span>Explícame un concepto</span>
-              </button>
-              <button class="suggestion-btn">
-                <span class="suggestion-icon">💻</span>
-                <span>Ayuda con código</span>
-              </button>
-              <button class="suggestion-btn">
-                <span class="suggestion-icon">✍️</span>
-                <span>Escritura creativa</span>
-              </button>
-              <button class="suggestion-btn">
-                <span class="suggestion-icon">🔍</span>
-                <span>Análisis de datos</span>
+              <button 
+                *ngFor="let suggestion of suggestions"
+                class="suggestion-btn"
+                (click)="useSuggestion(suggestion)">
+                <span class="suggestion-icon">{{ suggestion.icon }}</span>
+                <span>{{ suggestion.text }}</span>
               </button>
             </div>
           </div>
         </div>
 
-        <!-- Ejemplo de mensajes -->
-        <div class="message-group">
-          <!-- Mensaje del usuario -->
-          <div class="message user-message">
+        <!-- Mensajes de la conversación -->
+        <div class="message-group" *ngIf="messages.length > 0">
+          <div *ngFor="let message of messages" class="message" [class.user-message]="message.isUser" [class.gemini-message]="!message.isUser">
+            <!-- Avatar -->
             <div class="message-avatar">
-              <span class="avatar-icon user-avatar">👤</span>
-            </div>
-            <div class="message-content">
-              <div class="message-bubble user-bubble">
-                ¿Cómo funciona la inteligencia artificial?
-              </div>
-              <div class="message-time">14:32</div>
-            </div>
-          </div>
-
-          <!-- Respuesta de Gemini -->
-          <div class="message gemini-message">
-            <div class="message-avatar">
-              <div class="gemini-avatar">
+              <span *ngIf="message.isUser" class="avatar-icon user-avatar">👤</span>
+              <div *ngIf="!message.isUser" class="gemini-avatar">
                 <span class="avatar-sparkle">✨</span>
               </div>
             </div>
+
+            <!-- Contenido del mensaje -->
             <div class="message-content">
-              <div class="message-bubble gemini-bubble">
-                <div class="response-text">
-                  La inteligencia artificial (IA) funciona mediante algoritmos y modelos matemáticos que procesan grandes cantidades de datos para identificar patrones y hacer predicciones.
-                  <br><br>
-                  Los componentes principales incluyen:
-                  <br>• <strong>Datos de entrenamiento</strong>: Información que alimenta el modelo
-                  <br>• <strong>Algoritmos</strong>: Las "reglas" que procesan los datos
-                  <br>• <strong>Redes neuronales</strong>: Estructuras inspiradas en el cerebro humano
-                </div>
+              <div class="message-bubble" [class.user-bubble]="message.isUser" [class.gemini-bubble]="!message.isUser">
+                <div class="response-text" [innerHTML]="message.content"></div>
               </div>
-              <div class="message-actions">
-                <button class="action-btn copy-btn" title="Copiar">📋</button>
+              
+              <!-- Acciones del mensaje (solo para respuestas de Gemini) -->
+              <div class="message-actions" *ngIf="!message.isUser">
+                <button class="action-btn copy-btn" (click)="copyMessage(message.content)" title="Copiar">📋</button>
                 <button class="action-btn like-btn" title="Me gusta">👍</button>
                 <button class="action-btn dislike-btn" title="No me gusta">👎</button>
-                <button class="action-btn regenerate-btn" title="Regenerar">🔄</button>
+                <button class="action-btn regenerate-btn" (click)="regenerateResponse(message)" title="Regenerar">🔄</button>
               </div>
-              <div class="message-time">14:32</div>
+              
+              <div class="message-time">{{ formatTime(message.timestamp) }}</div>
             </div>
           </div>
         </div>
 
         <!-- Indicador de carga -->
-        <div class="message gemini-message" style="display: none;">
+        <div class="message gemini-message" *ngIf="isLoading">
           <div class="message-avatar">
             <div class="gemini-avatar loading">
               <span class="avatar-sparkle">✨</span>
@@ -194,11 +150,18 @@
               </button>
             </div>
             <textarea
+              #messageInput
+              [(ngModel)]="currentMessage"
+              (keydown)="onKeyDown($event)"
               placeholder="Pregunta cualquier cosa a Gemini..."
               class="message-input"
               rows="1"
-            ></textarea>
-            <button class="send-button" title="Enviar mensaje (Ctrl+Enter)">
+              [disabled]="isLoading"></textarea>
+            <button 
+              class="send-button" 
+              (click)="sendMessage()"
+              [disabled]="!currentMessage.trim() || isLoading"
+              title="Enviar mensaje (Ctrl+Enter)">
               <span class="send-icon">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
